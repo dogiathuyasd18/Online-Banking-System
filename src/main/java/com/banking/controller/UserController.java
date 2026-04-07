@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.banking.dto.JwtResponseDTO;
 import com.banking.dto.UserLoginDTO;
 import com.banking.dto.UserRegistrationDTO;
-import com.banking.dto.UserResponseDTO;
 import com.banking.entity.User;
 import com.banking.service.UserService;
 
@@ -51,18 +51,32 @@ public class UserController {
     // }
     // }
 
+    // @PostMapping("/login")
+    // public ResponseEntity<?> login(@Valid @RequestBody UserLoginDTO loginDTO) {
+    //     try {
+    //         // 1. Gọi Service và hứng lấy đối tượng UserResponseDTO (chứa cả Account)
+    //         UserResponseDTO response = userService.loginUser(loginDTO);
+
+    //         // 2. Trả về đối tượng này. Spring Boot sẽ tự động biến nó thành JSON.
+    //         return ResponseEntity.ok(response);
+
+    //     } catch (RuntimeException e) {
+    //         // Nếu sai email/pass, vẫn trả về lỗi 401 như cũ
+    //         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    //     }
+    // }
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody UserLoginDTO loginDTO) {
+    public ResponseEntity<?> login(@RequestBody UserLoginDTO loginDTO) {
         try {
-            // 1. Gọi Service và hứng lấy đối tượng UserResponseDTO (chứa cả Account)
-            UserResponseDTO response = userService.loginUser(loginDTO);
-
-            // 2. Trả về đối tượng này. Spring Boot sẽ tự động biến nó thành JSON.
+            JwtResponseDTO response = userService.authenticateUser(loginDTO);
             return ResponseEntity.ok(response);
-
-        } catch (RuntimeException e) {
-            // Nếu sai email/pass, vẫn trả về lỗi 401 như cũ
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (Exception e) {
+            // 🎯 ĐÂY LÀ CHỖ QUAN TRỌNG: 
+            // Nó sẽ in ra lỗi thật sự trên Console để bạn biết tại sao bị cấm
+            e.printStackTrace(); 
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Lỗi: " + e.getMessage());
         }
     }
+
 }

@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -44,6 +45,9 @@ public class User {
 
     @OneToMany(mappedBy="user",cascade=CascadeType.ALL)
     private List<Account> accounts;
+
+    @OneToMany(mappedBy="user",cascade=CascadeType.ALL,fetch=FetchType.EAGER)
+    private List<UserRole> userRoles;
 
     // Constructor for manual creation
     public User(String userId, String firstName, String lastName, String email, String phone) {
@@ -120,5 +124,13 @@ public class User {
 
     public void setAccounts(List<Account> accounts) {
         this.accounts = accounts;
+    }
+
+    public List<UserRole> getUserRoles() {
+        return userRoles;
+    }
+    
+    public void setUserRoles(List<UserRole> userRoles) {
+        this.userRoles = userRoles;
     }
 }

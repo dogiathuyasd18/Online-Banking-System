@@ -1,5 +1,6 @@
 package com.banking.service;
 
+import com.banking.dto.JwtResponseDTO;
 import com.banking.dto.UserLoginDTO;
 import com.banking.dto.UserRegistrationDTO;
 import com.banking.dto.UserResponseDTO;
@@ -14,4 +15,6 @@ public interface UserService {
 
     // void upDatePassWord(String userId, String password);
     // void updateMfaStatus(String userId, boolean status);
+
+    JwtResponseDTO authenticateUser(UserLoginDTO loginDTO);
 }

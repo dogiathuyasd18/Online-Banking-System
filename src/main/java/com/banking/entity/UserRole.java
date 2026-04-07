@@ -1,6 +1,11 @@
 package com.banking.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "User_Roles")
@@ -16,7 +21,7 @@ public class UserRole {
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
-
+    
     // 1. Machine Constructor
     public UserRole() {}
 
