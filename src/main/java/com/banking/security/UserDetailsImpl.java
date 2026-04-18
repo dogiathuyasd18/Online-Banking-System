@@ -1,6 +1,7 @@
 package com.banking.security;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -35,13 +36,20 @@ public class UserDetailsImpl implements UserDetails {
 
     // 🚀 2. HÀM QUAN TRỌNG NHẤT: Chuyển từ User Entity sang UserDetailsImpl
     public static UserDetailsImpl build(User user) {
-        // 1. Duyệt qua danh sách UserRole -> Lấy Role -> Lấy tên Role
-        List<GrantedAuthority> authorities = user.getUserRoles().stream()
-                .map(userRole -> {
-                    String roleName = userRole.getRole().getRoleName(); 
-                    return new SimpleGrantedAuthority(roleName);
-                })
-                .collect(Collectors.toList());
+        if (user.getCredential() == null) {
+            throw new IllegalStateException("User credential is missing for: " + user.getEmail());
+        }
+
+        List<GrantedAuthority> authorities = user.getUserRoles() == null
+                ? Collections.emptyList()
+                : user.getUserRoles().stream()
+                        .filter(userRole -> userRole.getRole() != null && userRole.getRole().getRoleName() != null)
+                        .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getRoleName()))
+                        .collect(Collectors.toList());
+
+        if (authorities.isEmpty()) {
+            authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        }
     
         return new UserDetailsImpl(
                 user.getUserId(),        // ID kiểu String (UUID)

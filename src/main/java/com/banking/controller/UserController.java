@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.banking.dto.ApiResponse;
 import com.banking.dto.JwtResponseDTO;
 import com.banking.dto.UserLoginDTO;
 import com.banking.dto.UserRegistrationDTO;
@@ -26,14 +27,11 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody UserRegistrationDTO dto) {
-        // 1. Nhận DTO từ Request Body
-        // 2. @Valid sẽ tự động kiểm tra các @NotBlank, @Email trong DTO
-        // 3. Gọi Service để xử lý logic
+    public ResponseEntity<ApiResponse<User>> register(@Valid @RequestBody UserRegistrationDTO dto) {
         User savedUser = userService.registerUser(dto);
-
-        // 4. Trả về mã 201 Created và thông tin User vừa tạo
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+        return new ResponseEntity<>(
+                new ApiResponse<>(HttpStatus.CREATED.value(), "User registered successfully", savedUser),
+                HttpStatus.CREATED);
     }
 
     // @PostMapping("/login")
@@ -67,16 +65,9 @@ public class UserController {
     // }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserLoginDTO loginDTO) {
-        try {
-            JwtResponseDTO response = userService.authenticateUser(loginDTO);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            // 🎯 ĐÂY LÀ CHỖ QUAN TRỌNG: 
-            // Nó sẽ in ra lỗi thật sự trên Console để bạn biết tại sao bị cấm
-            e.printStackTrace(); 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Lỗi: " + e.getMessage());
-        }
+    public ResponseEntity<ApiResponse<JwtResponseDTO>> login(@Valid @RequestBody UserLoginDTO loginDTO) {
+        JwtResponseDTO response = userService.authenticateUser(loginDTO);
+        return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Login successful", response));
     }
 
 }

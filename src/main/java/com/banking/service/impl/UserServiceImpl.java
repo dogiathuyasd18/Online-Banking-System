@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +28,7 @@ import com.banking.entity.Credential;
 import com.banking.entity.Role;
 import com.banking.entity.User;
 import com.banking.entity.UserRole;
+import com.banking.exception.BankingServiceException;
 import com.banking.repository.AccountRepository;
 import com.banking.repository.CredentialRepository;
 import com.banking.repository.RoleRepository;
@@ -92,7 +93,6 @@ public class UserServiceImpl implements UserService {
         // HÃY DÙNG:
         credential.setUser(savedUser); // ✅ Gán cả đối tượng User vừa lưu vào đây
 
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         credential.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         credentialRepository.save(credential);
         // --------------------------
@@ -109,10 +109,14 @@ public class UserServiceImpl implements UserService {
         savedAccount.setStatus(AccountStatus.active);
         accountRepository.save(savedAccount);
 
+        Role role = roleRepository.findByRoleName("ROLE_USER")
+                .or(() -> roleRepository.findById(1))
+                .orElseThrow(() -> new BankingServiceException(
+                        "Default role is missing. Please create ROLE_USER in Roles table.",
+                        "ROLE_NOT_FOUND"));
+
         UserRole userRole = new UserRole();
-        userRole.setUser(user);
-        Role role = new Role();
-        role.setRoleId(1);
+        userRole.setUser(savedUser);
         userRole.setRole(role);
         userRoleRepository.save(userRole);
         return savedUser;
@@ -125,7 +129,6 @@ public class UserServiceImpl implements UserService {
 
         // 2. Kiểm tra mật khẩu - Nếu sai cũng "đuổi khách" luôn
         // Dùng !...equals(...) để xử lý trường hợp sai trước (Fail-fast)
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         if (!passwordEncoder.matches(loginDTO.getPassword(), user.getCredential().getPasswordHash())) {
             throw new RuntimeException("Sai mật khẩu!");
         }
@@ -159,8 +162,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public JwtResponseDTO authenticateUser(UserLoginDTO loginDTO) {
         try {
-            // 🎯 ĐÂY LÀ CHỖ CẦN DEBUG:
-            // Nếu sai pass hoặc email, nó sẽ nhảy xuống catch ngay
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
 
@@ -174,10 +175,10 @@ public class UserServiceImpl implements UserService {
                     .collect(Collectors.toList());
 
             return new JwtResponseDTO(jwt, userDetails.getId(), userDetails.getEmail(), roles);
+        } catch (AuthenticationException e) {
+            throw e;
         } catch (Exception e) {
-            // 🕵️‍♂️ Cách debug nhanh nhất: In lỗi ra console
-            System.out.println("LỖI LOGIN RỒI: " + e.getMessage());
-            throw new RuntimeException("Xác thực thất bại: " + e.getMessage());
+            throw new BankingServiceException("Xác thực thất bại: " + e.getMessage(), "AUTH_PROCESSING_ERROR");
         }
     }
 }
