@@ -5,6 +5,8 @@ import { AuthPage } from './pages/AuthPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { TransferPage } from './pages/TransferPage'
 import { HistoryPage } from './pages/HistoryPage'
+import { CardsPage } from './pages/CardsPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { DashboardLayout } from './components/layout/DashboardLayout'
 
 function App() {
@@ -88,6 +90,32 @@ function App() {
             isAuthenticated ? (
               <DashboardLayout {...dashboardProps}>
                 <HistoryPage token={token} />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/auth" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/cards"
+          element={
+            isAuthenticated ? (
+              <DashboardLayout {...dashboardProps}>
+                <CardsPage />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/auth" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            isAuthenticated ? (
+              <DashboardLayout {...dashboardProps}>
+                <ProfilePage email={email} onLogout={logout} />
               </DashboardLayout>
             ) : (
               <Navigate to="/auth" replace />
