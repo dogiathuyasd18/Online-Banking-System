@@ -4,9 +4,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8082
 
 // --- MOCK MODE CONFIGURATION ---
 // Set USE_MOCK_DATA to true to test the frontend WITHOUT the backend/MySQL.
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
-const MOCK_DATA: Record<string, any> = {
+const MOCK_DATA: Record<string, unknown> = {
   '/api/users/login': {
     token: 'mock-jwt-token-abcdef123456',
     type: 'Bearer',
@@ -78,7 +78,7 @@ export async function apiRequest<T>(
     await new Promise(resolve => setTimeout(resolve, 600));
 
     let mockResult = MOCK_DATA[endpoint];
-    
+
     // Handle history endpoint which has a variable ID
     if (endpoint.includes('/history')) {
       mockResult = MOCK_DATA['history'];

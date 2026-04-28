@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { 
   ArrowUpRight, 
   ArrowDownLeft, 
@@ -10,7 +10,7 @@ import {
   Wallet
 } from 'lucide-react';
 import { apiRequest, ApiError } from '../api';
-import type { TransactionResponse } from '../types';
+import type { Account, ProfileResponse, TransactionResponse, UserProfile } from '../types';
 import { Button } from '../components/ui/Button';
 import { Card, CardTitle } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -22,34 +22,53 @@ interface DashboardPageProps {
 }
 
 export function DashboardPage({ token }: DashboardPageProps) {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountId, setAccountId] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [recentTransactions, setRecentTransactions] = useState<TransactionResponse[]>([]);
+  const [stats, setStats] = useState<ProfileResponse['stats']>({ totalIncome: 0, totalExpenses: 0 });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const loadHistory = async (id: string) => {
+  const loadHistory = useCallback(async (id: string) => {
     try {
       const res = await apiRequest<TransactionResponse[]>(`/api/accounts/${id}/history`, {}, token);
       setRecentTransactions(res.data.slice(0, 5));
-    } catch (err) {
+    } catch {
       console.error('Failed to load history');
     }
-  };
+  }, [token]);
+
+  const loadData = useCallback(async () => {
+    try {
+      const res = await apiRequest<ProfileResponse>('/api/profile', {}, token);
+      setProfile(res.data.profile);
+      setAccounts(res.data.accounts);
+      setStats(res.data.stats);
+      if (res.data.accounts.length > 0) {
+        const primaryAccount = res.data.accounts[0];
+        setAccountId(primaryAccount.id);
+        void loadHistory(primaryAccount.id);
+      }
+    } catch {
+      console.error('Failed to load profile data');
+    }
+  }, [loadHistory, token]);
 
   const handleOperation = async (endpoint: string, type: string) => {
     setError('');
     setMessage('');
     setIsLoading(true);
     try {
-      const res = await apiRequest<TransactionResponse>(
+      const res = await apiRequest<unknown>(
         endpoint,
         {
           method: 'POST',
           body: JSON.stringify({
-            receiverAccountId: accountId,
+            accountId: accountId,
             amount: Number(amount),
             description,
           }),
@@ -59,7 +78,7 @@ export function DashboardPage({ token }: DashboardPageProps) {
       setMessage(res.message);
       setAmount('');
       setDescription('');
-      if (accountId) loadHistory(accountId);
+      void loadData();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : `${type} failed`);
     } finally {
@@ -67,15 +86,41 @@ export function DashboardPage({ token }: DashboardPageProps) {
     }
   };
 
+  const handleOpenAccount = async () => {
+    setError('');
+    setMessage('');
+    setIsLoading(true);
+    try {
+      const res = await apiRequest<unknown>(
+        '/api/accounts',
+        {
+          method: 'POST',
+          body: JSON.stringify({ account_type: 'CHECKING' }),
+        },
+        token
+      );
+      setMessage(res.message);
+      void loadData();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to open account');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Optional: Load initial data if accountId exists in state/context
-  }, []);
+    void loadData();
+  }, [loadData]);
+
+  const mainAccount = accounts[0];
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-black text-slate-800 tracking-tight">Overview</h1>
-        <p className="text-slate-500 font-medium mt-1">Quick summary of your accounts and recent activity.</p>
+        <p className="text-slate-500 font-medium mt-1">
+          Welcome back, <span className="text-primary">{profile?.full_name || 'User'}</span>
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -86,12 +131,14 @@ export function DashboardPage({ token }: DashboardPageProps) {
               <Wallet className="h-6 w-6 opacity-60 text-primary-light" />
             </div>
             <div>
-              <h2 className="text-4xl font-black">$12,450.00</h2>
-              <p className="text-sm font-medium opacity-80 mt-1 text-primary-light">Main Account (....8291)</p>
+              <h2 className="text-4xl font-black">{formatCurrency(mainAccount?.balance ?? 0)}</h2>
+              <p className="text-sm font-medium opacity-80 mt-1 text-primary-light">
+                {mainAccount ? `${mainAccount.account_type} Account (${mainAccount.account_number})` : 'No account yet'}
+              </p>
             </div>
             <div className="flex items-center gap-2 text-sm font-bold text-emerald-300">
                <TrendingUp className="h-4 w-4" />
-               <span>+2.4% this month</span>
+               <span>Live Data</span>
             </div>
           </div>
           <div className="absolute -right-8 -top-8 h-48 w-48 rounded-full bg-blue-500 opacity-20 blur-3xl" />
@@ -104,8 +151,8 @@ export function DashboardPage({ token }: DashboardPageProps) {
              <ArrowDownLeft className="h-6 w-6 text-emerald-500" />
            </div>
            <div className="mt-4">
-             <h2 className="text-3xl font-black text-slate-800">$8,520.40</h2>
-             <p className="text-xs font-bold text-emerald-600 mt-1 uppercase tracking-tight">Across 3 sources</p>
+             <h2 className="text-3xl font-black text-slate-800">{formatCurrency(stats.totalIncome)}</h2>
+             <p className="text-xs font-bold text-emerald-600 mt-1 uppercase tracking-tight">Last 30 days</p>
            </div>
         </Card>
 
@@ -115,8 +162,8 @@ export function DashboardPage({ token }: DashboardPageProps) {
              <ArrowUpRight className="h-6 w-6 text-danger" />
            </div>
            <div className="mt-4">
-             <h2 className="text-3xl font-black text-slate-800">$3,140.20</h2>
-             <p className="text-xs font-bold text-danger mt-1 uppercase tracking-tight">Mainly "Shopping" & "Utilities"</p>
+             <h2 className="text-3xl font-black text-slate-800">{formatCurrency(stats.totalExpenses)}</h2>
+             <p className="text-xs font-bold text-danger mt-1 uppercase tracking-tight">Last 30 days</p>
            </div>
         </Card>
       </div>
@@ -218,6 +265,15 @@ export function DashboardPage({ token }: DashboardPageProps) {
                   Withdraw
                 </Button>
               </div>
+              <Button 
+                className="w-full mt-2 font-bold border-dashed" 
+                variant="outline"
+                onClick={handleOpenAccount}
+                disabled={isLoading}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {isLoading ? 'Processing...' : 'Open New Account'}
+              </Button>
             </div>
             {message && <p className="mt-4 text-xs font-bold text-emerald-600 text-center">{message}</p>}
             {error && <p className="mt-4 text-xs font-bold text-danger text-center">{error}</p>}

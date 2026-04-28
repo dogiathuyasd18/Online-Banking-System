@@ -1,76 +1,81 @@
-# 🏦 Online Banking System
+# Online Banking System
 
-![Banking Dashboard](banking_app_hero_1776746028612.png)
+A full-stack online banking prototype with a React/Vite frontend and a Node/Express backend backed by Supabase Auth and Postgres.
 
-A modern, full-stack online banking platform designed with a focus on security, performance, and a premium user experience. This project demonstrates a production-ready fintech architecture using Java Spring Boot for the backend and React for the frontend.
+## Features
 
-## 🚀 Features
+- Email/password authentication through Supabase Auth
+- Dashboard with accounts, balances, cards, and 30-day income/expense stats
+- Deposit, withdrawal, and account-to-account transfer flows
+- Transaction history with account ownership checks
+- Profile and card management
 
-- **🔐 Secure Authentication**: JWT-based authentication for secure user sessions.
-- **📊 Interactive Dashboard**: Real-time overview of account balance and recent activities.
-- **💸 Financial Operations**:
-  - Deposit and Withdrawal functionality.
-  - Seamless Peer-to-Peer (P2P) transfers.
-- **📜 Transaction History**: Comprehensive log of all financial movements with detailed filtering.
-- **🎨 Premium UI/UX**: High-fidelity dashboard design using Tailwind CSS and Lucide icons.
-- **⚡ Performance First**: Built with Vite for lightning-fast frontend development and Spring Boot for a robust backend.
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
-- **Framework**: [React 19](https://reactjs.org/)
-- **Build Tool**: [Vite](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Type Safety**: [TypeScript](https://www.typescriptlang.org/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Routing**: [React Router 7](https://reactrouter.com/)
+
+- React 19
+- Vite
+- TypeScript
+- Tailwind CSS
+- React Router
+- Lucide React
 
 ### Backend
-- **Framework**: [Spring Boot 3.2.4](https://spring.io/projects/spring-boot)
-- **Security**: [Spring Security](https://spring.io/projects/spring-security) (JWT)
-- **Data Access**: [Spring Data JPA](https://spring.io/projects/spring-data-jpa)
-- **Database**: [MySQL](https://www.mysql.com/)
-- **Build Tool**: [Maven](https://maven.apache.org/)
 
-## 🏗️ Architecture
+- Node.js
+- Express
+- TypeScript
+- Supabase Auth
+- Supabase Postgres with Row Level Security
 
-The system follows a decoupled client-server architecture:
-- **Backend**: A RESTful API built with Spring Boot, handling business logic, database interactions, and security.
-- **Frontend**: A Modern SPA (Single Page Application) built with React, consuming the backend API.
-- **Data Model**: Follows standard banking entities including `User`, `Account`, and `Transaction`.
+## Prerequisites
 
-Refer to [API_CONTRACT.md](API_CONTRACT.md) for detailed endpoint documentation.
+- Node.js 20 or newer is recommended because the installed Supabase SDK declares Node 20+ support.
+- A Supabase project.
+- The SQL from `backend/supabase_schema.sql` applied in the Supabase SQL editor.
 
-## 🚥 Getting Started
+## Backend Setup
 
-### Prerequisites
-- **Java**: JDK 17 or higher
-- **Node.js**: v18 or higher
-- **MySQL**: Running instance
+1. Create `backend/.env` from `backend/.env.example`.
+2. Fill in your Supabase URL, anon key, service role key, and CORS origin.
+3. Apply `backend/supabase_schema.sql` in Supabase.
+4. Start the API:
 
-### Backend Setup
-1. Configure your MySQL database in `src/main/resources/application.properties` (or equivalent).
-2. Build and run using Maven:
-   ```bash
-   mvn spring-boot:run
-   ```
-   The API will be available at `http://localhost:8082`.
+```bash
+cd backend
+npm install
+npm run dev
+```
 
-### Frontend Setup
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-   The application will be accessible at `http://localhost:5173`.
+The API defaults to `http://localhost:8082`.
 
-## 📄 License
+## Frontend Setup
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+1. Create `frontend/.env` from `frontend/.env.example`.
+2. Start the app:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend defaults to `http://localhost:5173`.
+
+## Verification
+
+```bash
+cd backend
+npm run build
+
+cd ../frontend
+npm run lint
+npm run build
+```
+
+## Security Notes
+
+- Never commit `backend/.env`; it contains the Supabase service role key.
+- Rotate the Supabase database password and service role key if they were ever shared.
+- User-facing money movement is implemented in SQL RPC functions so balance updates and transaction inserts happen atomically.

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Send, ShieldCheck, Info } from 'lucide-react';
 import { apiRequest, ApiError } from '../api';
+import type { Account, ProfileResponse } from '../types';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -11,25 +12,42 @@ interface TransferPageProps {
 }
 
 export function TransferPage({ token }: TransferPageProps) {
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [senderId, setSenderId] = useState('');
-  const [receiverId, setReceiverId] = useState('');
+  const [receiverAccountNumber, setReceiverAccountNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+  const loadAccounts = useCallback(async () => {
+    try {
+      const res = await apiRequest<ProfileResponse>('/api/profile', {}, token);
+      setAccounts(res.data.accounts);
+      if (res.data.accounts.length > 0) {
+        setSenderId(res.data.accounts[0].id);
+      }
+    } catch {
+      console.error('Failed to load accounts');
+    }
+  }, [token]);
+
+  useEffect(() => {
+    void loadAccounts();
+  }, [loadAccounts]);
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     setResult(null);
     setIsLoading(true);
     try {
-      const res = await apiRequest(
+      const res = await apiRequest<unknown>(
         '/api/accounts/transfer',
         {
           method: 'POST',
           body: JSON.stringify({
-            senderId,
-            receiverId,
+            senderAccountId: senderId,
+            receiverAccountNumber,
             amount: Number(amount),
             description,
           }),
@@ -39,12 +57,15 @@ export function TransferPage({ token }: TransferPageProps) {
       setResult({ type: 'success', message: res.message });
       setAmount('');
       setDescription('');
+      void loadAccounts();
     } catch (err) {
       setResult({ type: 'error', message: err instanceof ApiError ? err.message : 'Transfer failed' });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const currentAccount = accounts.find(a => a.id === senderId) || accounts[0] || { balance: 0, account_number: '' };
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -56,25 +77,37 @@ export function TransferPage({ token }: TransferPageProps) {
         
         <Card className="bg-primary/5 border-primary/10 py-4 px-6 h-fit shrink-0">
           <p className="text-xs font-black text-primary uppercase tracking-widest leading-none mb-1">Available Balance</p>
-          <p className="text-2xl font-black text-primary leading-none">$12,450.00</p>
+          <p className="text-2xl font-black text-primary leading-none">
+            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(currentAccount.balance)}
+          </p>
         </Card>
       </div>
 
       <Card className="shadow-2xl shadow-slate-200/50 p-8 border-slate-200/50">
         <form onSubmit={handleTransfer} className="space-y-8">
           <div className="grid gap-6 md:grid-cols-2">
+            <div className="flex w-full flex-col gap-1.5">
+              <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                Sender Account Number
+              </label>
+              <select
+                value={senderId}
+                onChange={(e) => setSenderId(e.target.value)}
+                required
+                className="flex h-12 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-base font-semibold text-slate-700 ring-offset-white focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+              >
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.account_number} - {account.account_type}
+                  </option>
+                ))}
+              </select>
+            </div>
             <Input 
-              label="Sender Account ID"
-              placeholder="e.g. ACC-12345"
-              value={senderId}
-              onChange={(e) => setSenderId(e.target.value)}
-              required
-            />
-            <Input 
-              label="Receiver Account Number / ID"
+              label="Receiver Account Number"
               placeholder="e.g. ACC-99999"
-              value={receiverId}
-              onChange={(e) => setReceiverId(e.target.value)}
+              value={receiverAccountNumber}
+              onChange={(e) => setReceiverAccountNumber(e.target.value)}
               required
             />
           </div>

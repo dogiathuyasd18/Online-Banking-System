@@ -55,7 +55,11 @@ export function AuthPage({ setToken, setEmail }: AuthPageProps) {
     try {
       await apiRequest('/api/users/register', {
         method: 'POST',
-        body: JSON.stringify(registerForm),
+        body: JSON.stringify({
+          email: registerForm.email,
+          password: registerForm.password,
+          fullName: `${registerForm.firstName} ${registerForm.lastName}`.trim()
+        }),
       });
       setIsLoginMode(true);
       // Optional: show success toast

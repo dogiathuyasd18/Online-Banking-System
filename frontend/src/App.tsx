@@ -102,7 +102,7 @@ function App() {
           element={
             isAuthenticated ? (
               <DashboardLayout {...dashboardProps}>
-                <CardsPage />
+                <CardsPage token={token} email={email} />
               </DashboardLayout>
             ) : (
               <Navigate to="/auth" replace />
@@ -115,7 +115,7 @@ function App() {
           element={
             isAuthenticated ? (
               <DashboardLayout {...dashboardProps}>
-                <ProfilePage email={email} onLogout={logout} />
+                <ProfilePage token={token} email={email} onLogout={logout} />
               </DashboardLayout>
             ) : (
               <Navigate to="/auth" replace />

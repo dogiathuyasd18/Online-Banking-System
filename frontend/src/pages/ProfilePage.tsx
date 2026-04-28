@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { 
   User, 
   Mail, 
@@ -15,22 +15,75 @@ import { Card, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
+import { ApiError, apiRequest } from '../api';
+import type { ProfileResponse } from '../types';
 
 interface ProfilePageProps {
+  token: string;
   email: string;
   onLogout: () => void;
 }
 
-export function ProfilePage({ email, onLogout }: ProfilePageProps) {
+export function ProfilePage({ token, email, onLogout }: ProfilePageProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({
-    name: 'John Doe',
-    email: email || 'john.doe@example.com',
-    phone: '+1 (555) 000-8888',
-    address: '123 Fintech Lane, New York, NY 10001',
+  const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await apiRequest<ProfileResponse>('/api/profile', {}, token);
+      setProfileData(res.data);
+      setFullName(res.data?.profile?.full_name || '');
+      setPhone(res.data?.profile?.phone || '');
+      setAddress(res.data?.profile?.address || '');
+    } catch {
+      console.error('Failed to fetch profile');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const res = await apiRequest('/api/profile', {
+        method: 'PUT',
+        body: JSON.stringify({ full_name: fullName, phone, address })
+      }, token);
+      setIsEditing(false);
+      setMessage(res.message);
+      void fetchProfile();
+    } catch (err) {
+      const errorMessage = err instanceof ApiError ? err.message : 'Failed to update profile';
+      setError(errorMessage);
+      console.error('Failed to update profile:', errorMessage);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchProfile();
+  }, [fetchProfile]);
+
+  if (isLoading) return <div className="p-8 text-center font-bold text-slate-500">Loading profile...</div>;
+
+  const profile = {
+    name: profileData?.profile?.full_name || 'User',
+    email: email,
+    phone: profileData?.profile?.phone || 'Not set',
+    address: profileData?.profile?.address || 'Not set',
     status: 'Verified',
-    memberSince: 'April 2023'
-  });
+    memberSince: profileData?.profile?.created_at ? new Date(profileData.profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'April 2024'
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -97,15 +150,15 @@ export function ProfilePage({ email, onLogout }: ProfilePageProps) {
                <div className="space-y-2">
                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Full Name</label>
                  <Input 
-                   value={profile.name} 
-                   onChange={(e) => setProfile({...profile, name: e.target.value})}
+                   value={fullName} 
+                   onChange={(e) => setFullName(e.target.value)}
                    disabled={!isEditing}
                  />
                </div>
                <div className="space-y-2">
                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Email Address</label>
                  <Input 
-                   value={profile.email} 
+                   value={email} 
                    disabled={true}
                    icon={<Mail className="h-4 w-4" />}
                  />
@@ -113,8 +166,8 @@ export function ProfilePage({ email, onLogout }: ProfilePageProps) {
                <div className="space-y-2">
                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Phone Number</label>
                  <Input 
-                   value={profile.phone} 
-                   onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                   value={phone} 
+                   onChange={(e) => setPhone(e.target.value)}
                    disabled={!isEditing}
                    icon={<Phone className="h-4 w-4" />}
                  />
@@ -122,8 +175,8 @@ export function ProfilePage({ email, onLogout }: ProfilePageProps) {
                <div className="space-y-2">
                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Address</label>
                  <Input 
-                   value={profile.address} 
-                   onChange={(e) => setProfile({...profile, address: e.target.value})}
+                   value={address} 
+                   onChange={(e) => setAddress(e.target.value)}
                    disabled={!isEditing}
                    icon={<MapPin className="h-4 w-4" />}
                  />
@@ -132,9 +185,17 @@ export function ProfilePage({ email, onLogout }: ProfilePageProps) {
              {isEditing && (
                <div className="flex justify-end mt-8 gap-3">
                  <Button variant="ghost" className="font-bold" onClick={() => setIsEditing(false)}>Cancel</Button>
-                 <Button className="font-bold" onClick={() => setIsEditing(false)}>Save Changes</Button>
+                 <Button 
+                   className="font-bold" 
+                   onClick={handleSave}
+                   disabled={isSaving}
+                 >
+                   {isSaving ? 'Saving...' : 'Save Changes'}
+                 </Button>
                </div>
              )}
+             {message && <p className="mt-4 text-right text-sm font-bold text-emerald-600">{message}</p>}
+             {error && <p className="mt-4 text-right text-sm font-bold text-red-600">{error}</p>}
           </Card>
 
           <Card header={<CardTitle>Security Preferences</CardTitle>}>

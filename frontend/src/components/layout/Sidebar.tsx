@@ -3,7 +3,6 @@ import {
   BarChart3, 
   Send, 
   History, 
-  User, 
   CreditCard, 
   LogOut, 
   LayoutDashboard
@@ -22,7 +21,6 @@ export function Sidebar({ onLogout }: SidebarProps) {
     { name: 'Transfer', icon: Send, path: '/transfer' },
     { name: 'History', icon: History, path: '/history' },
     { name: 'Cards', icon: CreditCard, path: '/cards' },
-    { name: 'Profile', icon: User, path: '/profile' },
   ];
 
   return (
