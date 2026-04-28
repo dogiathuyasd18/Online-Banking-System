@@ -21,7 +21,17 @@ export type JwtResponse = {
   roles: string[]
 }
 
-export type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER'
+export type AccountInfo = {
+  accountId: string
+  accountNumber: string
+  balance: number
+  status: string
+  accountType?: {
+    typeId: number
+    typeName: string
+  }
+  createdAt: string
+}
 
 export type TransactionResponse = {
   transactionId: string

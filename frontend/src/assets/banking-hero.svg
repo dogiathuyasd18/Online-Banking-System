@@ -1,0 +1,58 @@
+<svg width="960" height="640" viewBox="0 0 960 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="60" x2="840" y2="580" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E0ECFF"/>
+      <stop offset="1" stop-color="#F0F9FF"/>
+    </linearGradient>
+    <linearGradient id="card" x1="160" y1="120" x2="800" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="250" y1="300" x2="720" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10B981"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="960" height="640" rx="36" fill="url(#bg)"/>
+
+  <rect x="120" y="92" width="720" height="456" rx="30" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="4"/>
+  <rect x="160" y="132" width="640" height="180" rx="24" fill="url(#card)"/>
+
+  <text x="198" y="184" fill="#DBEAFE" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="600">
+    DIGITAL BANKING
+  </text>
+  <text x="198" y="236" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">
+    Account Balance
+  </text>
+  <text x="198" y="276" fill="#BFDBFE" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="500">
+    Available Balance
+  </text>
+
+  <rect x="160" y="344" width="300" height="164" rx="20" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="3"/>
+  <text x="190" y="386" fill="#1E3A8A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">
+    Transfer
+  </text>
+  <path d="M190 420H390" stroke="#2563EB" stroke-width="8" stroke-linecap="round"/>
+  <path d="M356 402L390 420L356 438" stroke="#2563EB" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="212" cy="468" r="18" fill="#10B981"/>
+  <text x="204" y="476" fill="white" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">$</text>
+  <text x="242" y="476" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">
+    Fast secure payments
+  </text>
+
+  <rect x="500" y="344" width="300" height="164" rx="20" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="3"/>
+  <text x="530" y="386" fill="#1E3A8A" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">
+    Activity
+  </text>
+  <path d="M534 456L574 426L614 444L654 398L694 430L734 382" stroke="url(#accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="734" cy="382" r="8" fill="#10B981"/>
+  <text x="534" y="488" fill="#334155" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="600">
+    Monthly performance
+  </text>
+
+  <rect x="734" y="146" width="88" height="56" rx="12" fill="#1D4ED8" opacity="0.25"/>
+  <text x="760" y="182" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700">
+    $
+  </text>
+</svg>
